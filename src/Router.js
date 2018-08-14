@@ -8,7 +8,11 @@ class Router extends React.PureComponent {
 
     setRoutes(props.routes);
     this.state = {route: current()};
-    listen((route) => this.setState({route}));
+    this.unlisten = listen((route) => this.setState({route}));
+  }
+
+  componentWillUnmount() {
+    this.unlisten();
   }
 
   getRouteProp = () => ({

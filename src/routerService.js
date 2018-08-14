@@ -39,11 +39,13 @@ function current() {
 
 function getCompiledRoute(route) {
   let params = [];
+  let nullParams = {};
   const routePath = route.path ? route.path.toString() : '/:path*';
   const path = pathToRegexp(routePath, params);
   const resolve = pathToRegexp.compile(routePath);
+  params.forEach((param) => param.optional || (nullParams[param.name] = 'null'));
 
-  return {...route, path, params, resolve};
+  return {...route, path, resolve, params, nullParams};
 }
 
 function getMatchedRouteParams(route, matches) {
@@ -54,11 +56,15 @@ function getMatchedRouteParams(route, matches) {
 }
 
 function resolve(name, params = {}) {
-  return routesByName[name] ? routesByName[name].resolve(params) : '/';
+  const route = routesByName[name];
+
+  return route ? route.resolve({...route.nullParams, ...params}) : name;
 }
 
 function navigate(name, params) {
-  history.push(resolve(name, params));
+  const newRoute = resolve(name, params);
+
+  history.location.pathname !== newRoute && history.push(newRoute);
 }
 
 export { setRoutes, current, listen, navigate, resolve, history };
